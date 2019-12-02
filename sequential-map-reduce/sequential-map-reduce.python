@@ -1,0 +1,66 @@
+%%time
+#calculate the execution time
+
+#import pandas to read the file
+import pandas as pd
+#import regular expressions
+import re
+#import conuter to count the amount of times word appears in text
+from collections import Counter
+from functools import reduce
+
+#words that should be discarded from the word counting
+STOP_WORDS = set([
+            'a', 'an', 'and', 'are', 'as', 'be', 'by', 'for', 'if', 'in', 
+            'is', 'it', 'of', 'or', 'py', 'rst', 'that', 'the', 'to', 'with',
+            ])
+
+#read the csv file
+beer_data = pd.read_csv (r'../beers.csv')
+#pick the column with beer names
+beer_names = pd.DataFrame(beer_data, columns= ['name'])
+#cast the dataframe to list
+lst_beer_names = beer_names.values.tolist()
+#multiply the data by 100 to better see the improvements of parallelization
+large_lst_beer_names = lst_beer_names*600
+
+#clean the data
+def clean_word(word):
+    return re.sub(r'[^\w\s]','',word).lower()
+#filter the data
+def word_not_in_stopwords(word):
+    return word not in STOP_WORDS and word and word.isalpha()  
+
+#get a text split it into tokens clean them, filter them, count them
+def mapper(text):
+    string = ''.join(text)
+    tokens_in_text = string.split()
+    tokens_in_text = map(clean_word, tokens_in_text)
+    tokens_in_text = filter(word_not_in_stopwords, tokens_in_text)
+    return Counter(tokens_in_text)
+#get 2 counters and merge them
+def reducer(cnt1, cnt2):
+    cnt1.update(cnt2)
+    return cnt1
+#get a chunk a do a mapreduce on it
+def chunk_mapper(chunk):
+    mapped = map(mapper, chunk)
+    reduced = reduce(reducer, mapped)
+    return reduced
+
+#yield successive n-sized chunks from list
+def chunkify(lst, n):
+    for i in range(0, len(lst), n):
+        yield lst[i:i + n]
+
+#split data into 36 chunks
+data_chunks = chunkify(large_lst_beer_names, 36)
+#mapping
+mapped = map(chunk_mapper, data_chunks)
+#reduce
+reduced = reduce(reducer, mapped)
+#print the top 10 words found in the craft beer names
+print("SEQUENTIAL MAP REDUCE RESULTS: \n \nMost Common Words Found in US Craft Beer Names:")
+for name in reduced.most_common(10):
+    print(name)
+print("\n")
