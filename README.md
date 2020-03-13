@@ -1,7 +1,4 @@
-# Map Reduce Assignment
----
-## Alikhan Bulatov
-### Student ID: 991 465 626
+# Map Reduce Implementation using sequential and parallel approaches
 ---
 #### Language Choice: python for both (jupyter notebooks)
 #### Distributed Solution: multiproccesor approach 
