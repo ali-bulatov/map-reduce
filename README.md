@@ -1,4 +1,4 @@
-# Map Reduce Implementation using sequential and parallel approaches
+# Map Reduce Implementation Using Sequential and Parallel Approaches
 ---
 #### Language Choice: python for both (jupyter notebooks)
 #### Distributed Solution: multiproccesor approach 
